@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ausgaben">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Cpath d='M20 14h24v36l-4-3-4 3-4-3-4 3-4-3-4 3z' fill='%23fff'/%3E%3Cpath d='M25 24h14M25 31h14M25 38h9' stroke='%230071e3' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Haus & Garten Ausgaben</title>
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* Layout: one centred column, Apple-style grouped surfaces — summary tiles, Bereich breakdown, filter bar, ledger table; sheet for entry + receipt scan */
+:root{
+  --bg:#f5f5f7; --surface:#ffffff; --fill:#f2f2f5; --line:rgba(0,0,0,.08);
+  --fg:#1d1d1f; --fg2:#6e6e73; --fg3:#a1a1a6;
+  --accent:#0071e3; --accent-soft:rgba(0,113,227,.10);
+  --rita:#bf5af2; --rita-soft:rgba(191,90,242,.12);
+  --ok:#248a3d; --ok-soft:rgba(36,138,61,.11);
+  --warn:#b25000; --warn-soft:rgba(255,149,0,.14); --warn-ring:rgba(255,149,0,.75);
+  --danger:#d70015;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000; --surface:#1c1c1e; --fill:#2c2c2e; --line:rgba(255,255,255,.10);
+  --fg:#f5f5f7; --fg2:#a1a1a6; --fg3:#6e6e73;
+  --accent:#2997ff; --accent-soft:rgba(41,151,255,.16);
+  --rita:#da8fff; --rita-soft:rgba(218,143,255,.16);
+  --ok:#30d158; --ok-soft:rgba(48,209,88,.14);
+  --warn:#ffb340; --warn-soft:rgba(255,179,64,.15); --warn-ring:rgba(255,179,64,.8);
+  --danger:#ff453a; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1c1c1e; --fill:#2c2c2e; --line:rgba(255,255,255,.10);
+  --fg:#f5f5f7; --fg2:#a1a1a6; --fg3:#6e6e73;
+  --accent:#2997ff; --accent-soft:rgba(41,151,255,.16);
+  --rita:#da8fff; --rita-soft:rgba(218,143,255,.16);
+  --ok:#30d158; --ok-soft:rgba(48,209,88,.14);
+  --warn:#ffb340; --warn-soft:rgba(255,179,64,.15); --warn-ring:rgba(255,179,64,.8);
+  --danger:#ff453a; --shadow:none; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:flex;flex-direction:column;gap:22px}
+.num{font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent-soft);outline-offset:2px;box-shadow:0 0 0 1px var(--accent)}
+
+/* Header */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.eyebrow{font-size:13px;font-weight:600;color:var(--fg2);letter-spacing:.02em}
+h1{margin:2px 0 0;font-size:clamp(28px,5vw,40px);line-height:1.08;font-weight:700;letter-spacing:-.025em;text-wrap:balance}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:980px;padding:9px 18px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .15s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-secondary{background:var(--fill);color:var(--fg)}
+.btn-secondary:hover{background:var(--line)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn svg{width:16px;height:16px}
+
+/* Tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tile{background:var(--surface);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);min-width:0}
+.tile .lbl{font-size:12px;font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:.06em}
+.tile .val{font-size:clamp(24px,3.6vw,32px);font-weight:700;letter-spacing:-.02em;margin-top:6px}
+.tile .sub{font-size:13px;color:var(--fg2);margin-top:2px}
+.tile.main .val{color:var(--accent)}
+.tile.rita .val{color:var(--rita)}
+.tiles.small .val{font-size:clamp(19px,2.6vw,22px)}
+.splitbar{height:6px;border-radius:6px;background:var(--fill);overflow:hidden;display:flex;margin-top:12px}
+.splitbar i{display:block;height:100%}
+
+/* Section card */
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:18px 20px 6px;flex-wrap:wrap}
+.card-h h2{margin:0;font-size:19px;font-weight:650;letter-spacing:-.01em}
+.card-h .meta{font-size:13px;color:var(--fg2)}
+
+/* Bereich breakdown */
+.areas{padding:6px 20px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
+.area{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;text-align:left}
+.area:hover .area-n{color:var(--accent)}
+.area.on .area-n{color:var(--accent);font-weight:600}
+.area-n{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.area-v{font-size:14px;font-weight:600;text-align:right}
+.area-bar{grid-column:1/-1;height:4px;border-radius:4px;background:var(--fill);overflow:hidden;margin-top:4px}
+.area-bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.area-c{grid-column:1/-1;font-size:12px;color:var(--fg2)}
+
+/* Filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px 14px;border-bottom:1px solid var(--line)}
+.seg{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;color:var(--fg2)}
+.seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.search{flex:1 1 200px;min-width:0;position:relative}
+.search input{width:100%;border:0;background:var(--fill);border-radius:9px;padding:7px 12px 7px 32px;font-size:14px}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--fg3)}
+select.sel{border:0;background:var(--fill);border-radius:9px;padding:6px 10px;font-size:13px;max-width:100%}
+
+/* Table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+th:first-child,td:first-child{padding-left:20px}
+th:last-child,td:last-child{padding-right:20px}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--fill)}
+td.nr{color:var(--fg3);width:44px}
+td.ber{color:var(--fg2);width:150px;font-size:13px}
+td.amt,th.amt{text-align:right;white-space:nowrap;font-weight:600}
+td.prod{min-width:220px}
+td.prod .note{display:block;font-size:12px;color:var(--fg2);margin-top:1px}
+td.beleg{font-size:13px;color:var(--fg2);max-width:240px;word-break:break-word}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:980px;white-space:nowrap}
+.pill.mirko{background:var(--accent-soft);color:var(--accent)}
+.pill.rita{background:var(--rita-soft);color:var(--rita)}
+.pill.ohne{background:var(--warn-soft);color:var(--warn)}
+.doc{display:inline-flex;align-items:flex-start;gap:6px}
+.doc svg{flex:none;width:13px;height:13px;margin-top:3px;color:var(--ok)}
+.photo-btn{display:inline-flex;align-items:center;gap:5px;border:0;background:var(--ok-soft);color:var(--ok);font-size:12px;font-weight:600;padding:2px 9px 2px 7px;border-radius:980px;cursor:pointer;margin-top:4px}
+.photo-btn svg{width:13px;height:13px}
+.beleg-cell{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+tfoot td{font-weight:600;border-bottom:0;background:var(--fill)}
+.empty{padding:40px 20px;text-align:center;color:var(--fg2)}
+.empty b{display:block;color:var(--fg);font-size:16px;margin-bottom:4px}
+.foot-note{font-size:12.5px;color:var(--fg2);max-width:72ch;line-height:1.55}
+
+/* Sheet */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:50}
+.sheet{background:var(--surface);border-radius:20px;width:100%;max-width:520px;max-height:100%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:2}
+.sheet-h h3{margin:0;font-size:16px;font-weight:650}
+.linkbtn{border:0;background:none;color:var(--accent);font-size:15px;cursor:pointer;padding:4px}
+.linkbtn.strong{font-weight:600}
+.linkbtn[disabled]{opacity:.4;cursor:default}
+form.fields{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.f label{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;color:var(--fg2);margin-bottom:5px;letter-spacing:.02em}
+.f input,.f select{width:100%;border:0;background:var(--fill);border-radius:10px;padding:10px 12px;font-size:15px;min-width:0}
+.f.unsure input,.f.unsure select{box-shadow:inset 0 0 0 2px var(--warn-ring)}
+.f .flag{display:none;color:var(--warn);font-weight:600}
+.f.unsure .flag{display:inline}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.hint{font-size:12px;color:var(--fg2);margin-top:4px}
+.hint button{border:0;background:none;color:var(--accent);font-size:12px;font-weight:600;padding:0;cursor:pointer}
+.danger-zone{padding:4px 18px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn-danger{background:none;color:var(--danger);padding-left:0}
+.btn-danger.confirm{background:var(--danger);color:#fff;padding-left:18px}
+
+/* Receipt block in sheet */
+.scan{margin:16px 18px 0;border-radius:14px;background:var(--fill);display:flex;gap:14px;padding:12px;align-items:center}
+.scan.drop{border:1.5px dashed var(--fg3);background:none;justify-content:center;text-align:center;flex-direction:column;padding:18px 12px;gap:8px;cursor:pointer}
+.scan.drop:hover{border-color:var(--accent)}
+.scan.drop svg{width:26px;height:26px;color:var(--fg3)}
+.scan.drop b{font-size:14px;font-weight:600}
+.scan.drop span{font-size:12.5px;color:var(--fg2)}
+.thumb{flex:none;width:72px;height:92px;border-radius:9px;overflow:hidden;background:var(--line);border:0;padding:0;cursor:zoom-in}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.scan-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.scan-status{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.scan-status.ok{color:var(--ok)}
+.scan-status.warn{color:var(--warn)}
+.scan-sub{font-size:12.5px;color:var(--fg2);line-height:1.4}
+.scan-actions{display:flex;gap:14px;flex-wrap:wrap}
+.scan-actions button{border:0;background:none;color:var(--accent);font-size:13px;font-weight:500;padding:0;cursor:pointer}
+.scan-actions button[hidden]{display:none}
+.spin{width:15px;height:15px;border-radius:50%;border:2px solid var(--accent-soft);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+details.artikel{margin:0 18px;border-top:1px solid var(--line);padding-top:10px}
+details.artikel summary{font-size:13px;font-weight:600;color:var(--fg2);cursor:pointer}
+details.artikel ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column}
+details.artikel li{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}
+details.artikel li span:first-child{min-width:0}
+.dup{margin:12px 18px 0;padding:10px 12px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:13px;font-weight:500}
+
+/* Lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:70;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain;background:#fff}
+.lightbox-cap{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));text-align:center;color:#fff;font-size:13px;padding:0 16px}
+
+/* Drop overlay */
+.dropzone{position:fixed;inset:0;z-index:65;background:rgba(0,113,227,.12);border:3px dashed var(--accent);display:flex;align-items:center;justify-content:center;pointer-events:none}
+.dropzone div{background:var(--surface);padding:14px 22px;border-radius:14px;font-weight:600;box-shadow:var(--shadow)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:980px;font-size:14px;font-weight:500;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:calc(100% - 32px);text-align:center}
+
+@media (max-width:760px){
+  .tiles{grid-template-columns:1fr 1fr}
+  .tiles .tile.main{grid-column:1/-1}
+  .tiles.small .tile:last-child{grid-column:1/-1}
+  .areas{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.spin{animation-duration:2.4s}}
+
+.btn.icon-only{padding:9px 11px}
+.set-sec{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.set-sec h4{margin:0;font-size:15px;font-weight:650}
+.set-sec p{margin:0;font-size:13px;color:var(--fg2);line-height:1.5}
+.set-sec a{color:var(--accent)}
+.set-row{display:flex;gap:10px;flex-wrap:wrap}
+.key-state{font-weight:600}
+.key-state.ok{color:var(--ok)}
+.set-foot{font-size:12px;color:var(--fg3);padding:12px 18px 18px;margin:0}
+.dup .linkbtn{font-size:13px;color:inherit;text-decoration:underline;padding:0 0 0 6px}
+
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow" id="stand">Ausgabenübersicht · alle Beträge in Euro</div>
+      <h1>Haus- und Garteninvestitionen</h1>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="scanBtn" type="button" disabled>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M2 5.2c0-.7.5-1.2 1.2-1.2h1.6l1.1-1.5h4.2L11.2 4h1.6c.7 0 1.2.5 1.2 1.2v6.6c0 .7-.5 1.2-1.2 1.2H3.2c-.7 0-1.2-.5-1.2-1.2z"/><circle cx="8" cy="8.4" r="2.5"/></svg>Beleg scannen
+      </button>
+      <button class="btn btn-secondary" id="addBtn" type="button" disabled>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>Position
+      </button>
+      <button class="btn btn-secondary" id="pdfBtn" type="button" disabled>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.8 7.4 8 10.6l3.2-3.2M3 13.5h10"/></svg>PDF exportieren
+      </button>
+      <button class="btn btn-secondary icon-only" id="setBtn" type="button" aria-label="Einstellungen und Backup">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7 3.4 3.4"/></svg>
+      </button>
+      <input type="file" id="fileIn" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/*" hidden>
+    </div>
+  </header>
+
+  <section class="tiles" aria-label="Summen">
+    <div class="tile main"><div class="lbl">Gesamtinvestition</div><div class="val num" id="kTotal">–</div><div class="sub" id="kTotalSub">Positionen werden geladen</div>
+      <div class="splitbar" aria-hidden="true"><i id="barM" style="background:var(--accent);width:0"></i><i id="barR" style="background:var(--rita);width:0"></i></div></div>
+    <div class="tile"><div class="lbl">Bezahlt von Mirko</div><div class="val num" id="kMirko">–</div><div class="sub" id="kMirkoSub"></div></div>
+    <div class="tile rita"><div class="lbl">Bezahlt von Rita</div><div class="val num" id="kRita">–</div><div class="sub" id="kRitaSub"></div></div>
+  </section>
+  <section class="tiles small" aria-label="Belegstatus">
+    <div class="tile"><div class="lbl">Mit Belegquelle</div><div class="val num" style="color:var(--ok)" id="kQuelle">–</div><div class="sub" id="kQuelleSub"></div></div>
+    <div class="tile"><div class="lbl">Ohne aktuelle Rechnung</div><div class="val num" style="color:var(--warn)" id="kOhne">–</div><div class="sub" id="kOhneSub"></div></div>
+    <div class="tile"><div class="lbl">Belegstatus</div><div class="val num" id="kStatus">–</div><div class="sub" id="kStatusSub"></div></div>
+  </section>
+
+  <section class="card" aria-labelledby="hAreas">
+    <div class="card-h"><h2 id="hAreas">Nach Bereich</h2><span class="meta">Tippen filtert die Liste</span></div>
+    <div class="areas" id="areas"></div>
+  </section>
+
+  <section class="card" aria-labelledby="hList">
+    <div class="card-h"><h2 id="hList">Einzelaufstellung</h2><span class="meta" id="listMeta"></span></div>
+    <div class="filters">
+      <div class="seg" role="group" aria-label="Bezahlt von" id="segPayer">
+        <button type="button" data-v="" class="on">Alle</button><button type="button" data-v="Mirko">Mirko</button><button type="button" data-v="Rita">Rita</button>
+      </div>
+      <div class="seg" role="group" aria-label="Beleg" id="segBeleg">
+        <button type="button" data-v="" class="on">Alle</button><button type="button" data-v="mit">Mit Beleg</button><button type="button" data-v="ohne">Ohne Rechnung</button>
+      </div>
+      <select class="sel" id="selArea" aria-label="Bereich"><option value="">Alle Bereiche</option></select>
+      <label class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="4.6"/><path d="m10.5 10.5 3 3"/></svg><input id="q" type="search" placeholder="Produkt, Händler oder Beleg suchen" aria-label="Suchen"></label>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Bereich</th><th>Produkt / Leistung</th><th class="amt">Betrag</th><th>Bezahlt von</th><th>Beleg / Quelle</th></tr></thead>
+        <tbody id="rows"></tbody>
+        <tfoot id="tfoot"></tfoot>
+      </table>
+    </div>
+    <div class="empty" id="empty"><b>Positionen werden geladen</b>Die Aufstellung erscheint hier, sobald die gespeicherten Daten da sind.</div>
+  </section>
+
+  <p class="foot-note">Hinweis: Positionen ohne Rechnung wurden aus deinen Angaben übernommen. Die Belegnamen dienen als Verweis auf die lokal gespeicherten Dateien; fotografierte Belege sind direkt in der Aufstellung hinterlegt und im PDF als Anhang enthalten. Doppelte Belegdateien wurden nicht doppelt gezählt; eine Feuertonnen-Offerte wurde ausgeschlossen, da sie kein Kaufbeleg ist.</p>
+</div>
+
+<div class="backdrop" id="sheetWrap" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-h">
+      <button class="linkbtn" type="button" id="cancelBtn">Abbrechen</button>
+      <h3 id="sheetTitle">Neue Position</h3>
+      <button class="linkbtn strong" type="submit" form="form" id="saveBtn">Sichern</button>
+    </div>
+
+    <div id="scanBox"></div>
+    <div class="dup" id="dupBox" hidden></div>
+
+    <form class="fields" id="form" autocomplete="off">
+      <div class="f" data-k="bereich"><label for="fBereich">Bereich <span class="flag">Bitte prüfen</span></label><input id="fBereich" list="bereichList" required placeholder="z. B. Bewässerung"><datalist id="bereichList"></datalist></div>
+      <div class="f" data-k="produkt"><label for="fProdukt">Produkt / Leistung <span class="flag">Bitte prüfen</span></label><input id="fProdukt" required placeholder="z. B. Gardena Schlauchwagen"></div>
+      <div class="row2">
+        <div class="f" data-k="betrag"><label for="fBetrag">Betrag (€) <span class="flag">Prüfen</span></label><input id="fBetrag" inputmode="decimal" required placeholder="0,00" class="num"><div class="hint" id="betragHint" hidden></div></div>
+        <div class="f"><label for="fWer">Bezahlt von</label><select id="fWer"><option>Mirko</option><option>Rita</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="f" data-k="datum"><label for="fDatum">Kaufdatum <span class="flag">Prüfen</span></label><input id="fDatum" type="date" class="num"></div>
+        <div class="f" data-k="haendler"><label for="fHaendler">Händler <span class="flag">Prüfen</span></label><input id="fHaendler" placeholder="z. B. Hornbach"></div>
+      </div>
+      <div class="f"><label for="fBeleg">Beleg / Quelle</label><input id="fBeleg" placeholder="Dateiname, leer = ohne Rechnung"><div class="hint">Leer lassen, wenn keine Rechnung vorliegt. Ein angehängtes Foto zählt als Beleg.</div></div>
+      <div class="f"><label for="fNotiz">Notiz</label><input id="fNotiz" placeholder="optional"></div>
+    </form>
+
+    <details class="artikel" id="artikelBox" hidden><summary id="artikelSum">Erkannte Artikel</summary><ul id="artikelList"></ul></details>
+
+    <div class="danger-zone" id="dangerZone" hidden>
+      <button class="btn btn-danger" type="button" id="delBtn">Position löschen</button>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="setWrap" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <div class="sheet-h"><span style="width:70px"></span><h3 id="setTitle">Einstellungen</h3><button class="linkbtn strong" type="button" id="setClose">Fertig</button></div>
+    <div class="set-sec">
+      <h4>Beleg-Scan mit Claude</h4>
+      <p>Zum automatischen Auslesen von Belegfotos braucht die Seite einen Anthropic-API-Key. Den erstellst du unter <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. Ein Scan kostet ein paar Cent. Der Key bleibt nur in diesem Browser gespeichert.</p>
+      <div class="f"><label for="keyIn">API-Key <span id="keyState" class="key-state"></span></label><input id="keyIn" type="password" autocomplete="off" placeholder="sk-ant-…" spellcheck="false"></div>
+      <div class="set-row"><button class="btn btn-primary" type="button" id="keySave">Key sichern</button><button class="btn btn-secondary" type="button" id="keyDel">Key entfernen</button></div>
+    </div>
+    <div class="set-sec">
+      <h4>Backup</h4>
+      <p>Deine Liste und die Belegfotos liegen nur in diesem Browser. Lade regelmäßig ein Backup herunter. Damit kannst du die Daten auch auf ein anderes Gerät übertragen.</p>
+      <div class="set-row"><button class="btn btn-secondary" type="button" id="bkOut">Backup herunterladen</button><button class="btn btn-secondary" type="button" id="bkIn">Backup einspielen</button><input type="file" id="bkFile" accept="application/json,.json" hidden></div>
+      <div class="dup" id="bkConfirm" hidden style="margin:12px 0 0"></div>
+    </div>
+    <p class="set-foot" id="setFoot"></p>
+  </div>
+</div>
+<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt="Belegfoto"><div class="lightbox-cap" id="lbCap"></div></div>
+<div class="dropzone" id="dropzone" hidden><div>Belegfoto hier ablegen</div></div>
+<div class="toast" id="toast" hidden></div>
+
+
+<script>window.SEED=[{"nr": 1, "bereich": "Pflanzen", "produkt": "Lorbeeren Garten", "betrag": 500.0, "bezahltVon": "Rita", "beleg": "", "notiz": "", "id": "p001"}, {"nr": 2, "bereich": "Pflanzen", "produkt": "Pflanzen/Sträucher auf Wall", "betrag": 400.0, "bezahltVon": "Rita", "beleg": "", "notiz": "", "id": "p002"}, {"nr": 3, "bereich": "Pflanzen", "produkt": "Pflanzen Beet vorne", "betrag": 300.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "", "id": "p003"}, {"nr": 4, "bereich": "Pflanzen", "produkt": "Lavendel, Hortensien, Flieder, Bambus, Bambusgräser", "betrag": 200.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "", "id": "p004"}, {"nr": 5, "bereich": "Pflanzen", "produkt": "Palmen", "betrag": 500.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "", "id": "p005"}, {"nr": 6, "bereich": "Pflanzen", "produkt": "Kiri/Paulownia-Bäume", "betrag": 50.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "", "id": "p006"}, {"nr": 7, "bereich": "Bewässerung", "produkt": "Gardena Funktionsbrause", "betrag": 40.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "", "id": "p007"}, {"nr": 8, "bereich": "Mähroboter", "produkt": "MOVA Mähroboter inkl. Garage", "betrag": 1200.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "", "id": "p008"}, {"nr": 9, "bereich": "Bewässerung", "produkt": "Aiper IrriSense 2 Bewässerungssystem", "betrag": 399.0, "bezahltVon": "Mirko", "beleg": "Bewässerungsroboter.pdf", "notiz": "", "id": "p009"}, {"nr": 10, "bereich": "Bewässerung", "produkt": "Pumpensteuerung CH20 mit Trockenlaufschutz", "betrag": 84.9, "bezahltVon": "Mirko", "beleg": "Drucksteuerung Pumpe.pdf", "notiz": "", "id": "p010"}, {"nr": 11, "bereich": "Bewässerung", "produkt": "Gartenpumpe Metabo P 9000 G inkl. Versand", "betrag": 265.17, "bezahltVon": "Mirko", "beleg": "Rechung Wasserpumpe.pdf", "notiz": "", "id": "p011"}, {"nr": 12, "bereich": "Bewässerung", "produkt": "PVC-Welt Nachbestellung: PE-Rohr 32 mm + Rückschlagventil + Versand", "betrag": 69.54, "bezahltVon": "Mirko", "beleg": "Material Bewässerung Nachbestellung 1.png", "notiz": "", "id": "p012"}, {"nr": 13, "bereich": "Bewässerung", "produkt": "PVC-Welt Nachbestellung: Regnergelenke + Übergangsmuffe + Versand", "betrag": 31.99, "bezahltVon": "Mirko", "beleg": "Material Bewässerung Nachbestellung 2.png", "notiz": "", "id": "p013"}, {"nr": 14, "bereich": "Bewässerung", "produkt": "PE-Rohr 25 x 100 m", "betrag": 94.95, "bezahltVon": "Mirko", "beleg": "PE Rohr.pdf", "notiz": "", "id": "p014"}, {"nr": 15, "bereich": "Bewässerung", "produkt": "Bewässerungsanlage: Hunter Regner, PE-Rohr, Fittings und Zubehör", "betrag": 547.44, "bezahltVon": "Mirko", "beleg": "Material Bewässerungsanlage.pdf", "notiz": "", "id": "p015"}, {"nr": 16, "bereich": "Bewässerung", "produkt": "Hunter ADJ Einstellwerkzeug", "betrag": 7.19, "bezahltVon": "Mirko", "beleg": "Hunter Schlüssel.pdf", "notiz": "", "id": "p016"}, {"nr": 17, "bereich": "Bewässerung", "produkt": "Plug&Rain Wassermengen-Messgerät inkl. Versand", "betrag": 9.4, "bezahltVon": "Mirko", "beleg": "Wasser Mengen Druckamatur.pdf", "notiz": "", "id": "p017"}, {"nr": 18, "bereich": "Bewässerung", "produkt": "Rückschlagventil Messing inkl. Versand", "betrag": 24.74, "bezahltVon": "Mirko", "beleg": "Rückschlagventil.pdf", "notiz": "", "id": "p018"}, {"nr": 19, "bereich": "Bewässerung", "produkt": "Pumpen-Kupplungsstücke und Verbinder", "betrag": 33.99, "bezahltVon": "Mirko", "beleg": "Kupplungstücke Pumpe.pdf", "notiz": "", "id": "p019"}, {"nr": 20, "bereich": "Bewässerung", "produkt": "PP-Übergang 32 x 1 1/4 Zoll für PE-Rohr", "betrag": 5.57, "bezahltVon": "Mirko", "beleg": "1:14 Verninder.pdf", "notiz": "", "id": "p020"}, {"nr": 21, "bereich": "Bewässerung", "produkt": "Gardena Hahnverbinder (6 Stück)", "betrag": 19.62, "bezahltVon": "Mirko", "beleg": "Gardena Zubehör.pdf", "notiz": "", "id": "p021"}, {"nr": 22, "bereich": "Rasenpflege", "produkt": "Rasenmischung ARENA Fairway Ultimate, 10 kg", "betrag": 114.9, "bezahltVon": "Mirko", "beleg": "Rasennachsaat.pdf", "notiz": "", "id": "p022"}, {"nr": 23, "bereich": "Rasenpflege", "produkt": "Starterdünger ARENA Starter, 20 kg", "betrag": 53.9, "bezahltVon": "Mirko", "beleg": "Rasenstarter Dünger.pdf", "notiz": "", "id": "p023"}, {"nr": 24, "bereich": "Rasenpflege", "produkt": "Rasensamen Fairway PS-251, 2 x 10 kg", "betrag": 209.9, "bezahltVon": "Mirko", "beleg": "Saatgut Neusaat.pdf", "notiz": "", "id": "p024"}, {"nr": 25, "bereich": "Rasenpflege", "produkt": "Rasendünger Frühjahr", "betrag": 74.99, "bezahltVon": "Mirko", "beleg": "Rasendünger Frühjahr.pdf", "notiz": "", "id": "p025"}, {"nr": 26, "bereich": "Rasenpflege", "produkt": "Rasendünger Sommer", "betrag": 52.99, "bezahltVon": "Mirko", "beleg": "Rasendünger Sommer.pdf", "notiz": "", "id": "p026"}, {"nr": 27, "bereich": "Rasenpflege", "produkt": "ROUNDUP Rasen-Unkrautfrei mit Dünger (Rechnung A)", "betrag": 44.99, "bezahltVon": "Mirko", "beleg": "Unkrautvernichter 1.pdf", "notiz": "", "id": "p027"}, {"nr": 28, "bereich": "Rasenpflege", "produkt": "ROUNDUP Rasen-Unkrautfrei mit Dünger (Rechnung B)", "betrag": 44.99, "bezahltVon": "Mirko", "beleg": "Unkrautvernichter 2.pdf", "notiz": "", "id": "p028"}, {"nr": 29, "bereich": "Gartenwerkzeug", "produkt": "Fiskars Teleskop-Unkrautstecher (Zahlbetrag)", "betrag": 47.99, "bezahltVon": "Mirko", "beleg": "Fiskars Unkrautstecher.pdf", "notiz": "", "id": "p029"}, {"nr": 30, "bereich": "Pflanzen", "produkt": "Sommerflieder 2er-Blüten-Sträucher-Kollektion inkl. Versand", "betrag": 34.85, "bezahltVon": "Mirko", "beleg": "Sommerflieder Paket.pdf", "notiz": "", "id": "p030"}, {"nr": 31, "bereich": "Mähroboter", "produkt": "Mähroboter-Klingen / Ersatzmesser", "betrag": 44.9, "bezahltVon": "Mirko", "beleg": "Messer Roboter.pdf", "notiz": "", "id": "p031"}, {"nr": 32, "bereich": "Mähroboter", "produkt": "Ersatzklingen + 15-m-Verlängerungsleitung", "betrag": 46.87, "bezahltVon": "Mirko", "beleg": "Klingen Mähroboter.pdf", "notiz": "", "id": "p032"}, {"nr": 33, "bereich": "Beleuchtung", "produkt": "Gartenbeleuchtung vorne, 35 m, warmweiß", "betrag": 51.59, "bezahltVon": "Mirko", "beleg": "Gartenbeleuchtung Vorne Weiß.pdf", "notiz": "", "id": "p033"}, {"nr": 34, "bereich": "Beleuchtung", "produkt": "LED-Gartenstrahler-Set, 4 Stück", "betrag": 89.99, "bezahltVon": "Mirko", "beleg": "Goove Outdoor.pdf", "notiz": "", "id": "p034"}, {"nr": 35, "bereich": "Beleuchtung", "produkt": "LED-Strahler für Bäume, 2 Stück", "betrag": 57.98, "bezahltVon": "Mirko", "beleg": "LED Strahler Bäume.pdf", "notiz": "", "id": "p035"}, {"nr": 36, "bereich": "Beleuchtung", "produkt": "Outdoor-Lampen-Set, 8 Stück", "betrag": 107.99, "bezahltVon": "Mirko", "beleg": "Lampen Outdoor.pdf", "notiz": "", "id": "p036"}, {"nr": 37, "bereich": "Beleuchtung", "produkt": "Netzteil für Beleuchtung", "betrag": 10.99, "bezahltVon": "Mirko", "beleg": "Netzteil Beleuchtung.pdf", "notiz": "", "id": "p037"}, {"nr": 38, "bereich": "Strom / Außenbereich", "produkt": "Erdkabel NYY-J 5 x 1,5 mm², 50 m", "betrag": 98.9, "bezahltVon": "Mirko", "beleg": "Erdstromkabel 2.pdf", "notiz": "", "id": "p038"}, {"nr": 39, "bereich": "Strom / Außenbereich", "produkt": "Erdkabel NYY-J 3 x 1,5 mm², 50 m", "betrag": 79.7, "bezahltVon": "Mirko", "beleg": "Erdstromkabel.pdf", "notiz": "", "id": "p039"}, {"nr": 40, "bereich": "Strom / Außenbereich", "produkt": "Outdoor-Kabeltrommel 50 m", "betrag": 89.95, "bezahltVon": "Mirko", "beleg": "Kabeltrommel.pdf", "notiz": "", "id": "p040"}, {"nr": 41, "bereich": "Strom / Außenbereich", "produkt": "Outdoor-Steckdosen", "betrag": 58.99, "bezahltVon": "Mirko", "beleg": "Outddor Steckdosen.pdf", "notiz": "", "id": "p041"}, {"nr": 42, "bereich": "Strom / Außenbereich", "produkt": "Außen-Verlängerungskabel mit Bewegungsmelder", "betrag": 27.89, "bezahltVon": "Mirko", "beleg": "Verlängerungskabel & Bewegungsmelder.pdf", "notiz": "", "id": "p042"}, {"nr": 43, "bereich": "Strom / Außenbereich", "produkt": "Fensterdurchführung-Verlängerungskabel", "betrag": 10.99, "bezahltVon": "Mirko", "beleg": "Verlängerungskabel Fensterdurchführung.pdf", "notiz": "", "id": "p043"}, {"nr": 44, "bereich": "Strom / Außenbereich", "produkt": "Verlängerungskabel 3 m mit Flachstecker", "betrag": 11.99, "bezahltVon": "Mirko", "beleg": "Verlängerung Flachstecker.pdf", "notiz": "", "id": "p044"}, {"nr": 45, "bereich": "Weitere Belege im Outdoor-Ordner", "produkt": "Amazon Echo Studio", "betrag": 189.99, "bezahltVon": "Mirko", "beleg": "Echo Studio.pdf", "notiz": "", "id": "p045"}, {"nr": 46, "bereich": "Weitere Belege im Outdoor-Ordner", "produkt": "Wandhalterung für Echo Studio", "betrag": 34.99, "bezahltVon": "Mirko", "beleg": "Halterung Echo Studio.pdf", "notiz": "", "id": "p046"}, {"nr": 47, "bereich": "Weitere Belege im Outdoor-Ordner", "produkt": "Outdoor-WLAN-Repeater", "betrag": 114.99, "bezahltVon": "Mirko", "beleg": "Outdoor Router.pdf", "notiz": "", "id": "p047"}, {"nr": 48, "bereich": "Weitere Belege im Outdoor-Ordner", "produkt": "Eufy SoloCam 2+1 Kameraset", "betrag": 348.99, "bezahltVon": "Mirko", "beleg": "Eufy Kamera Paket.pdf", "notiz": "", "id": "p048"}, {"nr": 49, "bereich": "Weitere Belege im Outdoor-Ordner", "produkt": "Eufy SoloCam S340", "betrag": 129.0, "bezahltVon": "Mirko", "beleg": "Eufy Kamera.pdf", "notiz": "", "id": "p049"}, {"nr": 50, "bereich": "Weitere Belege im Outdoor-Ordner", "produkt": "Eufy Türklingel E340 + SoloCam S340", "betrag": 256.97, "bezahltVon": "Mirko", "beleg": "Türklingel und Kamera Eufy.pdf", "notiz": "", "id": "p050"}, {"nr": 51, "bereich": "Weitere Belege im Outdoor-Ordner", "produkt": "Eufy Solarpanel-Dachrinnenhalter, 2 Stück", "betrag": 23.96, "bezahltVon": "Mirko", "beleg": "Türklingel und Kamera Eufy.pdf", "notiz": "", "id": "p051"}, {"nr": 52, "bereich": "Bewässerung", "produkt": "Gardena Schlauchwagen", "betrag": 30.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "neu ergänzt 18.10.2026", "id": "p052"}, {"nr": 53, "bereich": "Bewässerung", "produkt": "Gardena Schläuche", "betrag": 30.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "neu ergänzt 18.10.2026", "id": "p053"}, {"nr": 54, "bereich": "Bewässerung", "produkt": "Sprenkler Hornbach, 3 Stück à 45,00 €", "betrag": 135.0, "bezahltVon": "Mirko", "beleg": "", "notiz": "neu ergänzt 18.10.2026", "id": "p054"}];</script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const eur=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n||0);
+const today=new Date();
+const dLong=today.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+const dShort=today.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+const dIso=today.toISOString().slice(0,10);
+const deDate=iso=>{if(!iso||!/^\d{4}-\d{2}-\d{2}$/.test(iso))return '';const [y,m,d]=iso.split('-');return d+'.'+m+'.'+y};
+$('stand').textContent='Ausgabenübersicht · Stand '+dLong+' · alle Beträge in Euro';
+
+const LS_ITEMS='hg-ausgaben-items-v1', LS_KEY='hg-ausgaben-apikey';
+const MODELS=['claude-sonnet-5-5','claude-sonnet-4-5'];
+
+/* ---------- Storage: list in localStorage, photos in IndexedDB ---------- */
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+
+let items=[];
+(function load(){
+  const raw=lsGet(LS_ITEMS);
+  if(raw){try{const a=JSON.parse(raw);if(Array.isArray(a)){items=a;return}}catch(e){}}
+  items=JSON.parse(JSON.stringify(window.SEED||[]));
+  persist();
+})();
+function persist(){if(!lsSet(LS_ITEMS,JSON.stringify(items)))toast('Speichern im Browser nicht möglich. Bitte privaten Modus verlassen.',4500)}
+const sortItems=()=>items.sort((a,b)=>(+a.nr||0)-(+b.nr||0));
+
+const photoDB=(()=>{
+  let dbp=null;
+  const open=()=>dbp||(dbp=new Promise((res,rej)=>{
+    if(!window.indexedDB)return rej(new Error('no idb'));
+    const r=indexedDB.open('hg-ausgaben',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('photos');
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
+  }));
+  const tx=async(mode,fn)=>{const db=await open();return new Promise((res,rej)=>{const t=db.transaction('photos',mode);const st=t.objectStore('photos');const out=fn(st);t.oncomplete=()=>res(out&&out.result!==undefined?out.result:undefined);t.onerror=()=>rej(t.error)})};
+  return{
+    put:async blob=>{const id='f'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);await tx('readwrite',st=>st.put(blob,id));return id},
+    putWithId:(id,blob)=>tx('readwrite',st=>st.put(blob,id)),
+    get:id=>tx('readonly',st=>st.get(id)),
+    del:id=>tx('readwrite',st=>st.delete(id)),
+  };
+})();
+const urlCache=new Map();
+async function photoUrl(id){
+  if(urlCache.has(id))return urlCache.get(id);
+  const b=await photoDB.get(id);if(!b)throw new Error('missing');
+  const u=URL.createObjectURL(b);urlCache.set(id,u);return u;
+}
+
+let apiKey=lsGet(LS_KEY)||'';
+const canScan=()=>!!apiKey;
+
+const f={payer:'',beleg:'',area:'',q:''};
+let editing=null;
+
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const hasBeleg=it=>!!((it.beleg&&String(it.beleg).trim())||it.belegBild);
+const pos=n=>n===1?'1 Position':n+' Positionen';
+const metaLine=it=>[it.haendler,deDate(it.datum),it.notiz].filter(Boolean).join(' · ');
+const camIcon='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M2 5.2c0-.7.5-1.2 1.2-1.2h1.6l1.1-1.5h4.2L11.2 4h1.6c.7 0 1.2.5 1.2 1.2v6.6c0 .7-.5 1.2-1.2 1.2H3.2c-.7 0-1.2-.5-1.2-1.2z"/><circle cx="8" cy="8.4" r="2.5"/></svg>';
+
+function stats(list){
+  const s={total:0,m:0,r:0,q:0,o:0,n:list.length,nm:0,nr:0,nq:0,no:0};
+  list.forEach(it=>{const a=+it.betrag||0;s.total+=a;
+    if(it.bezahltVon==='Rita'){s.r+=a;s.nr++}else{s.m+=a;s.nm++}
+    if(hasBeleg(it)){s.q+=a;s.nq++}else{s.o+=a;s.no++}});
+  return s;
+}
+function areaStats(list){
+  const m=new Map();
+  list.forEach(it=>{const k=it.bereich||'Ohne Bereich';const e=m.get(k)||{name:k,sum:0,n:0,m:0,r:0};e.sum+=+it.betrag||0;e.n++;
+    if(it.bezahltVon==='Rita')e.r+=+it.betrag||0;else e.m+=+it.betrag||0;m.set(k,e)});
+  return [...m.values()].sort((a,b)=>b.sum-a.sum);
+}
+
+function render(){
+  sortItems();
+  const s=stats(items);
+  $('kTotal').textContent=eur(s.total); $('kTotalSub').textContent=pos(s.n);
+  $('kMirko').textContent=eur(s.m); $('kMirkoSub').textContent=pos(s.nm)+(s.total?' · '+Math.round(s.m/s.total*100)+' %':'');
+  $('kRita').textContent=eur(s.r); $('kRitaSub').textContent=pos(s.nr)+(s.total?' · '+Math.round(s.r/s.total*100)+' %':'');
+  $('barM').style.width=(s.total?s.m/s.total*100:0)+'%'; $('barR').style.width=(s.total?s.r/s.total*100:0)+'%';
+  $('kQuelle').textContent=eur(s.q); $('kQuelleSub').textContent=pos(s.nq);
+  $('kOhne').textContent=eur(s.o); $('kOhneSub').textContent=pos(s.no);
+  $('kStatus').textContent=s.nq+' / '+s.no; $('kStatusSub').textContent=s.nq+' mit Quelle · '+s.no+' ohne Rechnung';
+
+  const areas=areaStats(items), max=areas[0]?areas[0].sum:1;
+  $('areas').innerHTML=areas.map(a=>`<button type="button" class="area${f.area===a.name?' on':''}" data-a="${esc(a.name)}">
+    <span class="area-n">${esc(a.name)}</span><span class="area-v num">${eur(a.sum)}</span>
+    <span class="area-bar"><i style="width:${(a.sum/max*100).toFixed(1)}%"></i></span>
+    <span class="area-c num">${pos(a.n)} · ${s.total?(a.sum/s.total*100).toFixed(1).replace('.',','):0} %${a.r?' · davon Rita '+eur(a.r):''}</span></button>`).join('');
+
+  const sel=$('selArea'), cur=f.area;
+  sel.innerHTML='<option value="">Alle Bereiche</option>'+areas.map(a=>`<option${a.name===cur?' selected':''}>${esc(a.name)}</option>`).join('');
+  $('bereichList').innerHTML=areas.map(a=>`<option value="${esc(a.name)}">`).join('');
+
+  const q=f.q.trim().toLowerCase();
+  const list=items.filter(it=>(!f.payer||(it.bezahltVon||'Mirko')===f.payer)&&(!f.beleg||(f.beleg==='mit')===hasBeleg(it))&&(!f.area||it.bereich===f.area)
+    &&(!q||[it.produkt,it.beleg,it.bereich,it.notiz,it.haendler].join(' ').toLowerCase().includes(q)));
+  $('rows').innerHTML=list.map(it=>{
+    const ml=metaLine(it);
+    let bel='';
+    if(it.beleg)bel+=`<span class="doc"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 1.8h5.2L12.5 5v9.2H4z"/><path d="M9 1.8V5h3.5"/></svg>${esc(it.beleg)}</span>`;
+    if(it.belegBild)bel+=`<button type="button" class="photo-btn" data-photo="${esc(it.id)}">${camIcon}Foto ansehen</button>`;
+    if(!bel)bel='<span class="pill ohne">Ohne Rechnung</span>';
+    return `<tr data-id="${esc(it.id)}" tabindex="0">
+    <td class="nr num">${esc(it.nr)}</td><td class="ber">${esc(it.bereich)}</td>
+    <td class="prod">${esc(it.produkt)}${ml?`<span class="note">${esc(ml)}</span>`:''}</td>
+    <td class="amt num">${eur(it.betrag)}</td>
+    <td><span class="pill ${it.bezahltVon==='Rita'?'rita':'mirko'}">${esc(it.bezahltVon||'Mirko')}</span></td>
+    <td class="beleg"><div class="beleg-cell">${bel}</div></td></tr>`}).join('');
+  const fs=stats(list);
+  const filtered=list.length!==items.length;
+  $('tfoot').innerHTML=list.length?`<tr><td></td><td colspan="2">${filtered?'Summe Auswahl':'Summe gesamt'} · ${pos(list.length)}</td><td class="amt num">${eur(fs.total)}</td><td colspan="2" style="color:var(--fg2);font-weight:500">Mirko ${eur(fs.m)} · Rita ${eur(fs.r)}</td></tr>`:'';
+  $('listMeta').textContent=filtered?pos(list.length)+' von '+items.length:pos(items.length);
+  const em=$('empty');
+  if(items.length&&!list.length){em.hidden=false;em.innerHTML='<b>Keine Treffer</b>Kein Eintrag passt zu den gewählten Filtern.'}
+  else if(!items.length){em.hidden=false;em.innerHTML='<b>Noch keine Positionen</b>Scanne einen Beleg oder füge über „Position“ den ersten Kauf hinzu.'}
+  else em.hidden=true;
+  $('pdfBtn').disabled=!items.length;
+  $('scanBtn').lastChild.textContent=canScan()?'Beleg scannen':'Belegfoto';
+}
+
+/* Filters */
+function seg(id,key){$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;f[key]=b.dataset.v;[...$(id).children].forEach(x=>x.classList.toggle('on',x===b));render()})}
+seg('segPayer','payer');seg('segBeleg','beleg');
+$('selArea').addEventListener('change',e=>{f.area=e.target.value;render()});
+$('areas').addEventListener('click',e=>{const b=e.target.closest('.area');if(!b)return;f.area=f.area===b.dataset.a?'':b.dataset.a;render()});
+$('q').addEventListener('input',e=>{f.q=e.target.value;render()});
+
+function toast(msg,ms){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,ms||2800)}
+
+/* Lightbox */
+function openLightbox(src,cap){$('lbImg').src=src;$('lbCap').textContent=cap||'';$('lightbox').hidden=false}
+$('lightbox').addEventListener('click',()=>{$('lightbox').hidden=true;$('lbImg').removeAttribute('src')});
+
+/* ---------- Receipt photo state for the open sheet ---------- */
+// photo: {url, blob, storedId|null, isNew}
+let photo=null, scanState='idle', scanCtl=null, scanResult=null;
+
+function renderScanBox(){
+  const box=$('scanBox');
+  if(!photo){
+    box.innerHTML=`<div class="scan drop" id="dropArea" role="button" tabindex="0">${camIcon}<b>Belegfoto anhängen</b><span>${canScan()?'Claude liest Betrag, Datum und Händler automatisch aus.':'Das Foto wird mit der Position gespeichert. Zum automatischen Auslesen in den Einstellungen einen API-Key hinterlegen.'}</span></div>`;
+    $('dropArea').onclick=()=>$('fileIn').click();
+    $('dropArea').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fileIn').click()}};
+    return;
+  }
+  let status='',sub='';
+  if(scanState==='reading'){status='<span class="spin" aria-hidden="true"></span>Beleg wird ausgelesen …';sub='Das dauert meist 10 bis 30 Sekunden.'}
+  else if(scanState==='done'){
+    const u=(scanResult&&scanResult.unsicher)||[];
+    status=u.length?'<span class="scan-status warn">Ausgelesen, bitte markierte Felder prüfen</span>':'<span class="scan-status ok">Ausgelesen, bitte kurz prüfen</span>';
+    sub=scanResult&&scanResult.hinweis?esc(scanResult.hinweis):'Du kannst jedes Feld vor dem Sichern ändern.';
+  }
+  else if(scanState==='error'){status='<span class="scan-status warn">Konnte nicht ausgelesen werden</span>';sub=esc(scanResult&&scanResult.err||'Bitte die Felder von Hand ausfüllen.')}
+  else{status='<span>Belegfoto angehängt</span>';sub=canScan()?'Wird mit der Position gespeichert.':'Wird mit der Position gespeichert. Für automatisches Auslesen in den Einstellungen einen API-Key hinterlegen.'}
+  box.innerHTML=`<div class="scan">
+    <button type="button" class="thumb" id="thumbBtn" aria-label="Foto groß anzeigen">${photo.url?`<img src="${esc(photo.url)}" alt="">`:''}</button>
+    <div class="scan-body">
+      <div class="scan-status">${status}</div>
+      <div class="scan-sub">${sub}</div>
+      <div class="scan-actions">
+        ${scanState==='reading'?'<button type="button" id="stopScan">Auslesen stoppen</button>':`<button type="button" id="rescan" ${canScan()?'':'hidden'}>${scanState==='idle'?'Jetzt auslesen':'Erneut auslesen'}</button>`}
+        <button type="button" id="changePhoto">Anderes Foto</button>
+        <button type="button" id="removePhoto">Foto entfernen</button>
+      </div>
+    </div></div>`;
+  $('thumbBtn').onclick=()=>photo.url&&openLightbox(photo.url,$('fProdukt').value);
+  $('changePhoto').onclick=()=>$('fileIn').click();
+  $('removePhoto').onclick=()=>{if(scanCtl)scanCtl.abort();photo=null;scanState='idle';scanResult=null;clearUnsure();$('artikelBox').hidden=true;renderScanBox()};
+  if($('stopScan'))$('stopScan').onclick=()=>scanCtl&&scanCtl.abort();
+  if($('rescan'))$('rescan').onclick=()=>runScan(!editing);
+}
+
+function clearUnsure(){document.querySelectorAll('.f.unsure').forEach(x=>x.classList.remove('unsure'));$('betragHint').hidden=true}
+
+async function scaleImage(src,maxSide,q){
+  const url=URL.createObjectURL(src);
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('decode'));i.src=url});
+    const sc=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+    const w=Math.round(img.naturalWidth*sc),h=Math.round(img.naturalHeight*sc);
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q||.86));
+    if(!blob)throw new Error('encode');
+    return {blob,w,h};
+  }finally{URL.revokeObjectURL(url)}
+}
+
+async function handleFile(file){
+  if(!file)return;
+  if(file.type&&!file.type.startsWith('image/')){toast('Bitte ein Foto oder einen Screenshot wählen (JPG, PNG). PDFs vorher als Bild speichern.',4200);return}
+  if($('sheetWrap').hidden)openSheet(null,true);
+  let blob;
+  try{blob=(await scaleImage(file,2200)).blob}catch(e){toast('Dieses Bild kann nicht geöffnet werden. Bitte als JPG oder PNG versuchen.',4200);return}
+  if(scanCtl)scanCtl.abort();
+  if(photo&&photo.isNew&&photo.url)URL.revokeObjectURL(photo.url);
+  photo={url:URL.createObjectURL(blob),blob,storedId:null,isNew:true};
+  scanState='idle';scanResult=null;clearUnsure();renderScanBox();
+  if(canScan())runScan(!editing);
+}
+
+const PROMPT=bereiche=>`Du liest einen Kaufbeleg (Rechnung, Kassenbon, Bestellbestätigung, Online-Bestellung oder Screenshot) für eine private Kostenaufstellung „Haus & Garten“. Das Foto ist angehängt.
+
+Antworte nur mit genau diesem JSON-Objekt, ohne weiteren Text:
+{"produkt": string, "betrag": number|null, "datum": "YYYY-MM-DD"|null, "haendler": string|null, "bereich": string, "artikel": [{"name": string, "menge": number|null, "betrag": number|null}], "unsicher": [string], "hinweis": string|null}
+
+Regeln:
+- produkt: kurze, klare deutsche Bezeichnung wie in einer Kostenaufstellung. Bei mehreren Artikeln zusammenfassen, z. B. "Hunter Regner, PE-Rohr und Fittings". Mengen nennen, wenn sinnvoll, z. B. "Sprenkler, 3 Stück".
+- betrag: tatsächlich gezahlter Gesamtbetrag brutto in Euro inkl. Versand, nach Rabatten und Gutscheinen. Als Zahl mit Dezimalpunkt, z. B. 47.99.
+- datum: Kauf- bzw. Rechnungsdatum.
+- haendler: Name des Geschäfts oder Shops, z. B. "Hornbach", "Amazon".
+- bereich: genau einer aus dieser Liste, wenn er passt: ${JSON.stringify(bereiche)}. Sonst ein neuer kurzer Bereich.
+- artikel: die einzelnen Positionen vom Beleg, Beträge brutto.
+- unsicher: Namen der Felder (produkt, betrag, datum, haendler, bereich), die schlecht lesbar, abgeschnitten oder geschätzt sind. Leeres Array, wenn alles klar lesbar ist.
+- hinweis: ein kurzer deutscher Satz nur bei Besonderheiten, z. B. "Nur ein Angebot, keine Rechnung", "Teil des Belegs abgeschnitten", "Enthält auch Artikel, die nicht zu Haus & Garten gehören". Sonst null.
+- Wenn das Bild kein Kaufbeleg ist: betrag null, produkt "", hinweis mit Erklärung.`;
+
+function blobToB64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob)})}
+function parseJsonLoose(t){
+  t=String(t||'').trim();
+  try{return JSON.parse(t)}catch(e){}
+  const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m){try{return JSON.parse(m[1])}catch(e){}}
+  const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
+  return null;
+}
+async function callClaude(blob,prompt,signal){
+  const small=(await scaleImage(blob,1568,.88)).blob;
+  const b64=await blobToB64(small);
+  let lastErr=null;
+  for(const model of MODELS){
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal,headers:{
+      'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model,max_tokens:2000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:prompt}]}]})});
+    if(res.ok){const j=await res.json();const txt=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');const out=parseJsonLoose(txt);if(!out)throw {code:'invalid_json'};return out}
+    let body={};try{body=await res.json()}catch(e){}
+    const msg=(body.error&&body.error.message)||'';
+    if(res.status===404||(res.status===400&&/model/i.test(msg))){lastErr={code:'model'};continue}
+    throw {code:res.status===401?'auth':res.status===403?'forbidden':res.status===429?'rate':res.status===529||res.status>=500?'overloaded':res.status===400&&/credit|balance/i.test(msg)?'credit':'http',msg};
+  }
+  throw lastErr||{code:'model'};
+}
+const scanErr={auth:'Der API-Key ist ungültig. Bitte in den Einstellungen prüfen.',forbidden:'Der API-Key hat keine Berechtigung für diese Anfrage.',rate:'Gerade zu viele Anfragen. Bitte in einer Minute erneut auslesen.',overloaded:'Claude ist gerade überlastet. Bitte gleich erneut auslesen.',credit:'Dein Anthropic-Guthaben ist aufgebraucht. Bitte in der Console aufladen.',invalid_json:'Die Antwort war unvollständig. Bitte erneut auslesen.',model:'Kein passendes Claude-Modell erreichbar.'};
+
+async function runScan(fillAll){
+  if(!photo||!canScan())return;
+  if(scanCtl)scanCtl.abort();
+  const ctl=new AbortController();scanCtl=ctl;
+  scanState='reading';scanResult=null;clearUnsure();renderScanBox();$('saveBtn').disabled=true;
+  try{
+    if(!photo.blob&&photo.storedId)photo.blob=await photoDB.get(photo.storedId);
+    if(!photo.blob)throw {code:'nophoto'};
+    const bereiche=[...new Set(items.map(i=>i.bereich).filter(Boolean))];
+    const r=await callClaude(photo.blob,PROMPT(bereiche),ctl.signal);
+    if(scanCtl!==ctl)return;
+    scanResult=r;applyScan(r,fillAll);scanState='done';
+  }catch(e){
+    if(scanCtl!==ctl)return;
+    if(e&&e.name==='AbortError'){scanState='idle';scanResult=null}
+    else{scanState='error';scanResult={err:e&&e.code==='nophoto'?'Das gespeicherte Foto konnte nicht geladen werden.':(scanErr[e&&e.code]||(e instanceof TypeError?'Keine Verbindung zu Claude. Internet prüfen und erneut auslesen.':'Auslesen fehlgeschlagen. Bitte erneut versuchen oder Felder von Hand ausfüllen.'))}}
+  }finally{
+    if(scanCtl===ctl){scanCtl=null;$('saveBtn').disabled=false;renderScanBox()}
+  }
+}
+
+function applyScan(r,fillAll){
+  const set=(id,v)=>{const el=$(id);if(v==null||v==='')return;if(fillAll||!el.value.trim())el.value=v};
+  set('fProdukt',r.produkt);
+  set('fBereich',r.bereich);
+  if(typeof r.datum==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(r.datum))set('fDatum',r.datum);
+  set('fHaendler',r.haendler);
+  const b=typeof r.betrag==='number'?r.betrag:parseAmt(r.betrag);
+  if(isFinite(b)&&b>0){
+    const cur=parseAmt($('fBetrag').value);
+    if(fillAll||!$('fBetrag').value.trim())$('fBetrag').value=b.toFixed(2).replace('.',',');
+    else if(isFinite(cur)&&Math.abs(cur-b)>0.005){
+      const h=$('betragHint');h.hidden=false;h.innerHTML=`Auf dem Beleg: ${eur(b)} <button type="button" id="takeAmt">Übernehmen</button>`;
+      $('takeAmt').onclick=()=>{$('fBetrag').value=b.toFixed(2).replace('.',',');h.hidden=true;checkDup()};
+    }
+  }
+  if(!$('fBeleg').value.trim()){
+    const parts=[r.haendler||'Beleg',deDate(r.datum)].filter(Boolean).join(' ');
+    $('fBeleg').value=parts+' (Foto)';
+  }
+  (Array.isArray(r.unsicher)?r.unsicher:[]).forEach(k=>{const el=document.querySelector('.f[data-k="'+k+'"]');if(el)el.classList.add('unsure')});
+  if(!(isFinite(b)&&b>0)){const el=document.querySelector('.f[data-k="betrag"]');el&&el.classList.add('unsure')}
+  renderArtikel(Array.isArray(r.artikel)?r.artikel:[]);
+  checkDup();
+}
+
+function renderArtikel(list){
+  const box=$('artikelBox');
+  if(!list.length){box.hidden=true;return}
+  box.hidden=false;$('artikelSum').textContent='Erkannte Artikel ('+list.length+')';
+  $('artikelList').innerHTML=list.map(a=>`<li><span>${a.menge&&a.menge!==1?esc(a.menge)+' × ':''}${esc(a.name)}</span><span class="num">${typeof a.betrag==='number'?eur(a.betrag):'–'}</span></li>`).join('');
+}
+
+function checkDup(){
+  const b=parseAmt($('fBetrag').value), d=$('fDatum').value, box=$('dupBox');
+  if(!isFinite(b)||b<=0){box.hidden=true;return}
+  const hit=items.find(i=>(!editing||i.id!==editing.id)&&Math.abs((+i.betrag||0)-b)<0.005&&(!d||!i.datum||i.datum===d));
+  if(hit){box.hidden=false;box.textContent='Möglicherweise schon erfasst: Position '+hit.nr+' · '+hit.produkt+' · '+eur(hit.betrag)}
+  else box.hidden=true;
+}
+$('fBetrag').addEventListener('input',()=>{document.querySelector('.f[data-k="betrag"]').classList.remove('unsure');checkDup()});
+$('fDatum').addEventListener('change',checkDup);
+['fProdukt','fBereich','fDatum','fHaendler'].forEach(id=>$(id).addEventListener('input',e=>{const p=e.target.closest('.f');p&&p.classList.remove('unsure')}));
+
+/* Sheet */
+function openSheet(it,fromScan){
+  editing=it||null;
+  $('sheetTitle').textContent=it?'Position '+it.nr+' bearbeiten':(fromScan?'Beleg erfassen':'Neue Position');
+  $('fBereich').value=it?it.bereich||'':(f.area||'');$('fProdukt').value=it?it.produkt||'':'';
+  $('fBetrag').value=it&&it.betrag!=null?String((+it.betrag).toFixed(2)).replace('.',','):'';
+  $('fWer').value=it?(it.bezahltVon||'Mirko'):'Mirko';$('fBeleg').value=it?it.beleg||'':'';$('fNotiz').value=it?it.notiz||'':'';
+  $('fDatum').value=it&&it.datum?it.datum:'';$('fHaendler').value=it?it.haendler||'':'';
+  photo=null;
+  if(it&&it.belegBild){
+    const p={url:'',blob:null,storedId:it.belegBild,isNew:false};photo=p;
+    photoUrl(it.belegBild).then(u=>{if(photo===p){p.url=u;renderScanBox()}}).catch(()=>{if(photo===p){scanState='error';scanResult={err:'Das gespeicherte Foto fehlt in diesem Browser.'};renderScanBox()}});
+  }
+  scanState='idle';scanResult=null;clearUnsure();
+  renderArtikel(it&&Array.isArray(it.artikel)?it.artikel:[]);
+  $('dupBox').hidden=true;
+  $('dangerZone').hidden=!it;const d=$('delBtn');d.classList.remove('confirm');d.textContent='Position löschen';
+  $('saveBtn').disabled=false;
+  renderScanBox();
+  $('sheetWrap').hidden=false;
+  if(!fromScan)setTimeout(()=>$(it?'fProdukt':'fBereich').focus(),30);
+}
+function closeSheet(){
+  if(scanCtl)scanCtl.abort();
+  if(photo&&photo.isNew&&photo.url){const u=photo.url;setTimeout(()=>URL.revokeObjectURL(u),1000)}
+  $('sheetWrap').hidden=true;editing=null;photo=null;
+}
+$('addBtn').addEventListener('click',()=>openSheet(null));
+$('scanBtn').addEventListener('click',()=>{$('fileIn').click()});
+$('fileIn').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];e.target.value='';handleFile(file)});
+$('cancelBtn').addEventListener('click',closeSheet);
+$('sheetWrap').addEventListener('click',e=>{if(e.target===$('sheetWrap'))closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('lightbox').hidden){$('lightbox').hidden=true;return}if(!$('sheetWrap').hidden)closeSheet();else if(!$('setWrap').hidden)$('setWrap').hidden=true});
+$('rows').addEventListener('click',e=>{
+  const pb=e.target.closest('[data-photo]');
+  if(pb){e.stopPropagation();const it=items.find(i=>i.id===pb.dataset.photo);if(it)photoUrl(it.belegBild).then(u=>openLightbox(u,'Position '+it.nr+' · '+it.produkt+' · '+eur(it.betrag))).catch(()=>toast('Das Foto fehlt in diesem Browser.'));return}
+  const tr=e.target.closest('tr');if(!tr)return;openSheet(items.find(i=>i.id===tr.dataset.id))});
+$('rows').addEventListener('keydown',e=>{if(e.key==='Enter'){const tr=e.target.closest('tr');if(tr)openSheet(items.find(i=>i.id===tr.dataset.id))}});
+
+/* Drag & drop / paste a receipt */
+let dragDepth=0;
+const isFileDrag=e=>e.dataTransfer&&[...e.dataTransfer.types].includes('Files');
+window.addEventListener('dragenter',e=>{if(!isFileDrag(e))return;e.preventDefault();dragDepth++;$('dropzone').hidden=false});
+window.addEventListener('dragover',e=>{if(isFileDrag(e))e.preventDefault()});
+window.addEventListener('dragleave',e=>{if(!isFileDrag(e))return;dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)$('dropzone').hidden=true});
+window.addEventListener('drop',e=>{if(!isFileDrag(e))return;e.preventDefault();dragDepth=0;$('dropzone').hidden=true;const file=e.dataTransfer.files[0];if(file&&file.type==='application/json')return importBackup(file);handleFile(file)});
+window.addEventListener('paste',e=>{const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type.startsWith('image/'));if(!it)return;e.preventDefault();handleFile(it.getAsFile())});
+
+function parseAmt(v){v=String(v??'').trim().replace(/\s|€/g,'');if(!v)return NaN;if(v.includes(','))v=v.replace(/\./g,'').replace(',','.');const n=Number(v);return isFinite(n)?Math.round(n*100)/100:NaN}
+$('form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const betrag=parseAmt($('fBetrag').value);
+  if(isNaN(betrag)||betrag<=0){toast('Bitte einen gültigen Betrag eingeben, z. B. 45,00');$('fBetrag').focus();return}
+  $('saveBtn').disabled=true;
+  try{
+    let imgId=photo?photo.storedId:null;
+    if(photo&&photo.isNew&&photo.blob){try{imgId=await photoDB.put(photo.blob)}catch(err){imgId=null;toast('Foto konnte nicht gespeichert werden. Die Position wird ohne Foto gesichert.',4200)}}
+    const data={bereich:$('fBereich').value.trim(),produkt:$('fProdukt').value.trim(),betrag,bezahltVon:$('fWer').value,
+      beleg:$('fBeleg').value.trim(),notiz:$('fNotiz').value.trim(),datum:$('fDatum').value||'',haendler:$('fHaendler').value.trim(),belegBild:imgId||''};
+    if(scanResult&&Array.isArray(scanResult.artikel))data.artikel=scanResult.artikel.slice(0,60);
+    const oldImg=editing&&editing.belegBild;
+    if(editing){Object.assign(editing,data);toast('Position '+editing.nr+' gesichert')}
+    else{const nr=items.reduce((m,i)=>Math.max(m,+i.nr||0),0)+1;items.push({id:'p'+String(nr).padStart(3,'0')+'-'+Date.now().toString(36),nr,...data});toast('Position '+nr+' hinzugefügt')}
+    persist();
+    if(oldImg&&oldImg!==imgId){photoDB.del(oldImg).catch(()=>{});urlCache.delete(oldImg)}
+    closeSheet();render();
+  }catch(err){toast('Speichern fehlgeschlagen, bitte erneut versuchen')}
+  finally{$('saveBtn').disabled=false}
+});
+$('delBtn').addEventListener('click',()=>{
+  const b=$('delBtn');if(!editing)return;
+  if(!b.classList.contains('confirm')){b.classList.add('confirm');b.textContent='Wirklich löschen';return}
+  const nr=editing.nr,img=editing.belegBild;
+  items=items.filter(i=>i!==editing);persist();
+  if(img)photoDB.del(img).catch(()=>{});
+  closeSheet();render();toast('Position '+nr+' gelöscht');
+});
+
+/* Downloads */
+function saveFile(blob,name){
+  const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+}
+
+/* PDF */
+async function loadForPdf(id){
+  const blob=await photoDB.get(id);if(!blob)throw new Error('missing');
+  const {blob:jb,w,h}=await scaleImage(blob,1600,.82);
+  const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(jb)});
+  return {data,w,h};
+}
+async function buildPdf(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297,M=14,ink=[29,29,31],gray=[110,110,115],light=[245,245,247],blue=[0,113,227],purple=[150,60,200],green=[36,138,61],orange=[178,80,0];
+  sortItems();
+  const s=stats(items);
+  doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(...ink);
+  doc.text('Haus- und Garteninvestitionen',M,24);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...gray);
+  doc.text('Ausgabenübersicht · Stand '+dLong+' · alle Beträge in Euro',M,30.5);
+
+  const boxes=[
+    ['GESAMTINVESTITION',eur(s.total),pos(s.n),blue],
+    ['BEZAHLT VON MIRKO',eur(s.m),pos(s.nm),ink],
+    ['BEZAHLT VON RITA',eur(s.r),pos(s.nr),purple],
+    ['MIT BELEGQUELLE',eur(s.q),pos(s.nq),green],
+    ['OHNE AKTUELLE RECHNUNG',eur(s.o),pos(s.no),orange],
+    ['BELEGSTATUS',s.nq+' mit Quelle',s.no+' ohne Rechnung',ink]];
+  const bw=(W-2*M-8)/3,bh=21;
+  boxes.forEach((b,i)=>{const x=M+(i%3)*(bw+4),y=37+Math.floor(i/3)*(bh+4);
+    doc.setFillColor(...light);doc.roundedRect(x,y,bw,bh,2.5,2.5,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...gray);doc.text(b[0],x+4,y+6);
+    doc.setFontSize(i===5?11:14);doc.setTextColor(...b[3]);doc.text(b[1],x+4,y+13.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);doc.text(b[2],x+4,y+18.2)});
+
+  let y=37+2*(bh+4)+6;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(...ink);doc.text('Einzelaufstellung',M,y);
+  const header=(data)=>{doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);
+    doc.text('Haus & Garten · Ausgabenübersicht · Stand '+dShort,M,9);doc.text('Seite '+data.pageNumber,W-M,9,{align:'right'});
+    doc.setDrawColor(225,225,230);doc.setLineWidth(.2);doc.line(M,11,W-M,11)};
+  const tableStyle={theme:'plain',margin:{left:M,right:M,top:16},
+    styles:{font:'helvetica',fontSize:8.2,textColor:ink,cellPadding:{top:1.9,bottom:1.9,left:2,right:2},lineColor:[230,230,234],lineWidth:{bottom:.15},valign:'top'},
+    headStyles:{fontStyle:'bold',fontSize:7,textColor:gray,fillColor:light,lineWidth:0},
+    footStyles:{fontStyle:'bold',fillColor:light,textColor:ink,lineWidth:0},
+    didDrawPage:header};
+  const withPhoto=items.filter(it=>it.belegBild);
+  const anhang=new Map(withPhoto.map((it,i)=>[it.id,'A'+(i+1)]));
+  const belegText=it=>{const p=[];if(it.beleg)p.push(it.beleg);if(it.belegBild)p.push('Foto im Anhang '+anhang.get(it.id));return p.length?p.join('\n'):'Ohne Rechnung'};
+  const body=items.map(it=>{const ml=metaLine(it);return [it.nr,it.bereich,it.produkt+(ml?'\n'+ml:''),eur(it.betrag),it.bezahltVon||'Mirko',belegText(it)]});
+  doc.autoTable({...tableStyle,startY:y+3,
+    head:[['#','BEREICH','PRODUKT / LEISTUNG','BETRAG','BEZAHLT VON','BELEG / QUELLE']],
+    body,foot:[['','Summe',pos(s.n),eur(s.total),'','']],
+    columnStyles:{0:{cellWidth:8,textColor:gray},1:{cellWidth:30,textColor:gray},2:{cellWidth:'auto'},3:{cellWidth:22,halign:'right',fontStyle:'bold'},4:{cellWidth:19},5:{cellWidth:44}},
+    didParseCell:d=>{
+      if(d.section==='head'&&d.column.index===3)d.cell.styles.halign='right';
+      if(d.section==='foot'&&d.column.index===3)d.cell.styles.halign='right';
+      if(d.section==='body'&&d.column.index===5&&d.cell.raw==='Ohne Rechnung'){d.cell.styles.textColor=orange;d.cell.styles.fontStyle='italic'}
+      if(d.section==='body'&&d.column.index===5&&d.cell.raw!=='Ohne Rechnung')d.cell.styles.textColor=gray;
+      if(d.section==='body'&&d.column.index===4&&d.cell.raw==='Rita'){d.cell.styles.textColor=purple;d.cell.styles.fontStyle='bold'}
+    }});
+
+  y=doc.lastAutoTable.finalY+10;
+  if(y>250){doc.addPage();y=22}
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(...ink);doc.text('Zusammenfassung nach Bereich',M,y);
+  const areas=areaStats(items);
+  doc.autoTable({...tableStyle,startY:y+3,
+    head:[['BEREICH','POSITIONEN','MIRKO','RITA','SUMME','ANTEIL']],
+    body:areas.map(a=>[a.name,a.n,eur(a.m),a.r?eur(a.r):'–',eur(a.sum),(a.sum/s.total*100).toFixed(1).replace('.',',')+' %']),
+    foot:[['Gesamt',s.n,eur(s.m),eur(s.r),eur(s.total),'100 %']],
+    columnStyles:{1:{halign:'right',cellWidth:22},2:{halign:'right',cellWidth:26},3:{halign:'right',cellWidth:24},4:{halign:'right',cellWidth:26,fontStyle:'bold'},5:{halign:'right',cellWidth:18}},
+    didParseCell:d=>{if((d.section==='head'||d.section==='foot')&&d.column.index>0)d.cell.styles.halign='right'}});
+
+  y=doc.lastAutoTable.finalY+8;
+  const note='Hinweis: Positionen ohne Rechnung wurden aus deinen Angaben übernommen. Die Belegnamen dienen als Verweis auf die lokal gespeicherten Dateien; fotografierte Belege sind im Anhang abgebildet. Doppelte Belegdateien wurden nicht doppelt gezählt; eine Feuertonnen-Offerte wurde ausgeschlossen, da sie kein Kaufbeleg ist.';
+  const lines=doc.splitTextToSize(note,W-2*M);
+  if(y+lines.length*3.6>285){doc.addPage();header({pageNumber:doc.getNumberOfPages()});y=22}
+  doc.setFont('helvetica','normal');doc.setFontSize(7.8);doc.setTextColor(...gray);doc.text(lines,M,y);
+
+  for(const it of withPhoto){
+    doc.addPage();header({pageNumber:doc.getNumberOfPages()});
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(...ink);
+    doc.text('Anhang '+anhang.get(it.id)+' · Position '+it.nr,M,22);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...gray);
+    const cap=doc.splitTextToSize([it.produkt,eur(it.betrag),it.bezahltVon||'Mirko',it.haendler,deDate(it.datum)].filter(Boolean).join(' · '),W-2*M);
+    doc.text(cap,M,28);
+    const top=28+cap.length*4+3, maxW=W-2*M, maxH=H-top-14;
+    try{
+      const im=await loadForPdf(it.belegBild);
+      const r=Math.min(maxW/im.w,maxH/im.h);const w=im.w*r,h=im.h*r;
+      doc.addImage(im.data,'JPEG',M+(maxW-w)/2,top,w,h);
+    }catch(e){doc.setTextColor(...orange);doc.text('Belegfoto ist in diesem Browser nicht vorhanden.',M,top+6)}
+  }
+  return doc.output('blob');
+}
+$('pdfBtn').addEventListener('click',async()=>{
+  if(!items.length)return;
+  if(!window.jspdf){toast('PDF-Bibliothek konnte nicht geladen werden. Internet prüfen und Seite neu laden.');return}
+  const btn=$('pdfBtn');btn.disabled=true;
+  try{
+    if(items.some(i=>i.belegBild))toast('PDF wird mit Belegfotos erstellt …',6000);
+    saveFile(await buildPdf(),'Haus_und_Garten_Ausgaben_'+dIso+'.pdf');toast('PDF erstellt')}
+  catch(err){toast('PDF konnte nicht erstellt werden')}
+  finally{btn.disabled=false}
+});
+
+/* ---------- Settings: API key + backup ---------- */
+function renderSettings(){
+  const st=$('keyState');
+  if(apiKey){st.textContent='hinterlegt';st.className='key-state ok';$('keyIn').placeholder='•••• '+apiKey.slice(-4)}
+  else{st.textContent='nicht hinterlegt';st.className='key-state';$('keyIn').placeholder='sk-ant-…'}
+  $('keyDel').disabled=!apiKey;
+  $('setFoot').textContent=pos(items.length)+' · '+items.filter(i=>i.belegBild).length+' Belegfotos in diesem Browser';
+  $('bkConfirm').hidden=true;
+}
+$('setBtn').addEventListener('click',()=>{renderSettings();$('setWrap').hidden=false});
+$('setClose').addEventListener('click',()=>{$('setWrap').hidden=true});
+$('setWrap').addEventListener('click',e=>{if(e.target===$('setWrap'))$('setWrap').hidden=true});
+$('keySave').addEventListener('click',()=>{
+  const v=$('keyIn').value.trim();
+  if(!v){toast('Bitte zuerst den API-Key einfügen');return}
+  if(!/^sk-ant-/.test(v)){toast('Ein Anthropic-API-Key beginnt mit „sk-ant-“');return}
+  apiKey=v;lsSet(LS_KEY,v);$('keyIn').value='';renderSettings();render();toast('API-Key gesichert. Beleg-Scan ist aktiv.');
+});
+$('keyDel').addEventListener('click',()=>{apiKey='';lsDel(LS_KEY);renderSettings();render();toast('API-Key entfernt')});
+
+$('bkOut').addEventListener('click',async()=>{
+  const btn=$('bkOut');btn.disabled=true;
+  try{
+    const photos={};
+    for(const it of items){if(!it.belegBild)continue;try{const b=await photoDB.get(it.belegBild);if(b)photos[it.belegBild]=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(b)})}catch(e){}}
+    const data={app:'haus-garten-ausgaben',version:1,exportiert:new Date().toISOString(),items,photos};
+    saveFile(new Blob([JSON.stringify(data)],{type:'application/json'}),'Haus_und_Garten_Backup_'+dIso+'.json');
+    toast('Backup erstellt');
+  }finally{btn.disabled=false}
+});
+$('bkIn').addEventListener('click',()=>$('bkFile').click());
+$('bkFile').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];e.target.value='';if(file)importBackup(file)});
+async function importBackup(file){
+  let data;
+  try{data=JSON.parse(await file.text())}catch(e){toast('Diese Datei ist kein gültiges Backup.');return}
+  if(!data||data.app!=='haus-garten-ausgaben'||!Array.isArray(data.items)){toast('Diese Datei ist kein Backup dieser Aufstellung.');return}
+  if($('setWrap').hidden){renderSettings();$('setWrap').hidden=false}
+  const box=$('bkConfirm');box.hidden=false;
+  box.innerHTML=`Backup vom ${esc(new Date(data.exportiert).toLocaleDateString('de-DE'))} mit ${pos(data.items.length)} ersetzt die aktuelle Liste (${pos(items.length)}). <button type="button" class="linkbtn" id="bkGo">Jetzt ersetzen</button>`;
+  $('bkGo').onclick=async()=>{
+    for(const [id,url] of Object.entries(data.photos||{})){try{const b=await (await fetch(url)).blob();await photoDB.putWithId(id,b)}catch(e){}}
+    items=data.items;persist();urlCache.clear();render();renderSettings();toast('Backup eingespielt: '+pos(items.length));
+  };
+}
+
+render();
+})();
+
+</script>
+</body>
+</html>
